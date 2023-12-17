@@ -3,7 +3,6 @@ import 'package:auto_route/src/matcher/route_matcher.dart';
 import 'package:auto_route/src/route/page_route_info.dart';
 import 'package:auto_route/src/router/controller/controller_scope.dart';
 import 'package:auto_route/src/router/parser/route_information_parser.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -41,10 +40,15 @@ class AutoRouterDelegate extends RouterDelegate<UrlState> with ChangeNotifier {
   static reportUrlChanged(BuildContext context, String url) {
     Router.of(context)
         .routeInformationProvider
-        ?.routerReportsNewRouteInformation(
+        // Fix for Flutter 2.5 -> 2.6 - See [RouteInformationReportingHack]
+        // on remove change back to '?.routerReportsNewRouteInformation('
+        ?.nonBreakingRouterReportsNewRouteInformation(
           RouteInformation(
             location: url,
           ),
+          // Fix for Flutter 2.5 -> 2.6 - See [RouteInformationReportingHack]
+          //On remove uncomment
+          //type: RouteInformationReportingType.navigate,
         );
   }
 

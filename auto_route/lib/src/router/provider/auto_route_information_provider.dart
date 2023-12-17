@@ -24,6 +24,9 @@ class AutoRouteInformationProvider extends RouteInformationProvider
     );
   }
 
+  // Fix for Flutter 2.5 -> 2.6 - See [RouteInformationReportingHack]
+  // When remove, just uncomment - commented code is updated for 2.6
+  /*
   @override
   void routerReportsNewRouteInformation(RouteInformation routeInformation,
       {bool isNavigation = true}) {
@@ -39,6 +42,7 @@ class AutoRouteInformationProvider extends RouteInformationProvider
     );
     _value = routeInformation;
   }
+   */ // End Fix for Flutter 2.5 -> 2.6 - See [RouteInformationReportingHack]
 
   @override
   RouteInformation get value => _value;
@@ -85,5 +89,38 @@ class AutoRouteInformationProvider extends RouteInformationProvider
     assert(hasListeners);
     _platformReportsNewRouteInformation(RouteInformation(location: route));
     return true;
+  }
+}
+
+/// VERY Hacky compatibility measure across Flutter 2.5 -> 2.6
+/// Flutter 2.6 introduces breaking changes, complete with
+/// - new type (RouteInformationReportingType enum)
+/// - Method signature changes
+///
+/// In order to use that method in 2.5 and 2.6, this hack
+/// - Provides alternative for the changed method on interface
+/// - Comments out overridden method
+/// - Changes usage to alternative method
+///
+/// To remove (once 2.6 hits stable)
+/// - Delete this object
+/// - Follow uncomment instructions (2 locations)
+///   - can search by 'RouteInformationReportingHack'
+extension RouteInformationReportingHack on RouteInformationProvider {
+  void nonBreakingRouterReportsNewRouteInformation(
+      RouteInformation routeInformation,
+      {bool isNavigation = true}) {
+    var replace = false;
+    if (routeInformation is AutoRouteInformation) {
+      replace = routeInformation.replace;
+    }
+    SystemNavigator.selectMultiEntryHistory();
+    SystemNavigator.routeInformationUpdated(
+      location: routeInformation.location!,
+      state: routeInformation.state,
+      replace: replace || !isNavigation,
+    );
+
+    (this as AutoRouteInformationProvider)._value = routeInformation;
   }
 }
